@@ -1,0 +1,12 @@
+.millennium/
+.research/
+promo-work/
+.codex/
+node_modules/
+docs/research.md
+package-lock.json
+# Starlight rewrites these SDK configuration files during prepare/pack.
+package.json
+.luarc.json
+tsconfig.json
+webview/tsconfig.json

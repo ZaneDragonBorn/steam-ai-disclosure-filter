@@ -1,0 +1,10 @@
+node_modules/
+.millennium/
+dist/
+*.star
+.millennium.package.toml
+.research/
+.codex/
+promo-work/
+*.log
+.millennium/lsp/

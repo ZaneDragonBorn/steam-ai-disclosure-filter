@@ -1,0 +1,28 @@
+[plugin]
+id = "dev.wyatt.ai-disclosure-filter"
+name = "AI Disclosure Filter"
+version = "0.7.8"
+author = "Wyatt"
+description = "Generative AI controls in Steam's storefront filter sidebars."
+
+[backend]
+entry = "backend/main.lua"
+sources = ["backend/**/*.lua"]
+
+[frontend]
+entry = "frontend/index.tsx"
+
+[webkit]
+entry = "webview/preload.ts"
+
+[compiler]
+output_path = "auto"
+
+[dev]
+auto_restart = true
+reload_steamui_when = "both"
+
+[logger]
+backend_prefix = "AI BACKEND"
+frontend_prefix = "AI SETTINGS"
+webview_prefix = "AI STORE"
