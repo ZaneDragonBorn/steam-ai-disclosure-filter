@@ -44,7 +44,9 @@ Download the `.star` file rather than the source-code ZIP. Once the plugin is ap
 3. Expand **Discovery AI Filter** to choose a filter for recommendations and discovery feeds. You can also keep wishlisted or owned games visible here.
 4. Under **AI disclosure features**, choose whether to show AI tags and the disclosure on game pages. Filtering still works with these turned off.
 
-![Default AI filter and visibility settings](docs/images/plugin-settings.png)
+<a href="docs/images/plugin-settings.png">
+    <img src="docs/images/plugin-settings.png" alt="Default AI filter and visibility settings" width="360">
+</a>
 
 ### 2. Filter a store listing
 
@@ -63,18 +65,24 @@ Exempted games stay visible with any preset. If a newly saved custom filter is m
 
 _Search results:_
 
-![AI filtering, blocked-title review and exemptions in Steam search](docs/images/search-filter.png)
+<a href="docs/images/search-filter.png">
+    <img src="docs/images/search-filter.png" alt="AI filtering, blocked-title review and exemptions in Steam search" width="760">
+</a>
 
 _Category listings:_
 
-![Category filtering and an AI usage tag](docs/images/category-filter.png)
+<a href="docs/images/category-filter.png">
+    <img src="docs/images/category-filter.png" alt="Category filtering and an AI usage tag" width="760">
+</a>
 
 ### 3. Filter your Wishlist
 
 1. Open your Wishlist and choose **Options → Generative AI Filter**.
 2. Choose a preset on the slider. To clear it, remove the **Gen AI: …** tag above your Wishlist.
 
-![Generative AI filtering in Wishlist Options](docs/images/wishlist-filter.png)
+<a href="docs/images/wishlist-filter.png">
+    <img src="docs/images/wishlist-filter.png" alt="Generative AI filtering in Wishlist Options" width="760">
+</a>
 
 ### 4. Customize filters and exemptions
 
@@ -82,13 +90,17 @@ _Category listings:_
 2. Save it to use it in the filter sliders. Drag filters into the order you want them to appear.
 3. Expand **Exemptions** to add a game by Steam App ID, review its saved disclosure or remove an exemption.
 
-![Custom filter ordering and usage rules](docs/images/custom-filters.png)
+<a href="docs/images/custom-filters.png">
+    <img src="docs/images/custom-filters.png" alt="Custom filter ordering and usage rules" width="640">
+</a>
 
 ### 5. Read a game's disclosure
 
 AI tags give you a quick idea of a game's disclosed usage. To read Steam's full disclosure, open the game's store page and expand **Generative AI disclosure** near the top.
 
-![Expanded Steam AI disclosure on a game page](docs/images/game-disclosure.png)
+<a href="docs/images/game-disclosure.png">
+    <img src="docs/images/game-disclosure.png" alt="Expanded Steam AI disclosure on a game page" width="360">
+</a>
 
 ## Known Limitations
 
