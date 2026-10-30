@@ -24,7 +24,7 @@ end
 ---@return table
 function filterState()
     local policy = {}
-    for _, key in ipairs({"defaultMode", "discoveryMode", "preserveWishlist", "preserveOwned", "showAITags", "showStoreDisclosure", "allowedApps", "phrases", "customFilters", "filterOrder", "debug"}) do
+    for _, key in ipairs({"defaultMode", "discoveryMode", "wishlistMode", "preserveWishlist", "preserveOwned", "showAITags", "showStoreDisclosure", "allowedApps", "phrases", "customFilters", "filterOrder", "debug"}) do
         policy[key] = millennium.config.get(key)
     end
     return policy
@@ -66,6 +66,7 @@ local function on_load()
     end
     if millennium.config.get("debug") == nil then millennium.config.set("debug", false) end
     if millennium.config.get("discoveryMode") == nil then millennium.config.set("discoveryMode", "off") end
+    if millennium.config.get("wishlistMode") == nil then millennium.config.set("wishlistMode", "off") end
     if millennium.config.get("preserveWishlist") == nil then millennium.config.set("preserveWishlist", true) end
     if millennium.config.get("preserveOwned") == nil then millennium.config.set("preserveOwned", false) end
     if millennium.config.get("showAITags") == nil then millennium.config.set("showAITags", true) end

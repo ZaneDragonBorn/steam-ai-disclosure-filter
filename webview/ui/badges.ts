@@ -1,4 +1,5 @@
 import { disclosureTier } from '../../shared/settings';
+import { WISHLIST_ENTRY, WISHLIST_METADATA } from '../steam/wishlist';
 
 interface Marker {
     badge: HTMLElement;
@@ -14,6 +15,7 @@ export class DisclosureBadges {
 [data-aif-badge]{display:inline-flex;align-items:center;vertical-align:middle;white-space:nowrap;font:10px/15px Arial,sans-serif;font-weight:600;letter-spacing:.2px;padding:0 4px;margin-left:6px;border:1px solid #57718a;border-radius:2px;color:#c9e8f7;background:#182a38;cursor:default;text-transform:none;flex-shrink:0}
 [data-aif-badge=heavy]{border-color:#84734f;color:#eddbb5;background:#302b20}
 [data-aif-badge][data-aif-footer]{margin:4px auto 4px 6px;align-self:center}
+[data-aif-badge][data-aif-wishlist-metadata]{margin-left:0;align-self:center}
 [data-aif-badge]:focus-visible{outline:2px solid #67c1f5;outline-offset:2px}
 `;
         doc.head.append(this.style);
@@ -54,20 +56,21 @@ export class DisclosureBadges {
             const chartTitle = card.matches('tr')
                 ? card.querySelector<HTMLElement>('td:nth-child(3) a div')
                 : null;
-            const host =
-                review?.parentElement ??
-                card.querySelector<HTMLElement>('.review_summary_row, .hover_review_summary') ??
-                card.querySelector<HTMLElement>('.hover_title') ??
-                chartTitle ??
-                title ??
-                footer ??
-                price?.parentElement ??
-                (card.matches('[popover]')
-                    ? card.querySelector<HTMLElement>('._3WlfumeMCR40WR-uBdg3Gx')
-                    : null) ??
-                (card.matches('.community_recommendation_app')
-                    ? card.querySelector<HTMLElement>('.discount_block')?.parentElement
-                    : null);
+            const host = card.querySelector(WISHLIST_ENTRY)
+                ? card.querySelector<HTMLElement>(WISHLIST_METADATA)
+                : (review?.parentElement ??
+                  card.querySelector<HTMLElement>('.review_summary_row, .hover_review_summary') ??
+                  card.querySelector<HTMLElement>('.hover_title') ??
+                  chartTitle ??
+                  title ??
+                  footer ??
+                  price?.parentElement ??
+                  (card.matches('[popover]')
+                      ? card.querySelector<HTMLElement>('._3WlfumeMCR40WR-uBdg3Gx')
+                      : null) ??
+                  (card.matches('.community_recommendation_app')
+                      ? card.querySelector<HTMLElement>('.discount_block')?.parentElement
+                      : null));
             if (host) hosts.add(host);
         }
         const previous = this.markers.get(card) ?? [];
@@ -84,6 +87,8 @@ export class DisclosureBadges {
                 const badge = this.doc.createElement('span');
                 badge.tabIndex = 0;
                 badge.setAttribute('role', 'img');
+                if (host.matches(WISHLIST_METADATA))
+                    badge.setAttribute('data-aif-wishlist-metadata', '');
                 marker = { badge, host };
                 markers.push(marker);
                 if (host === footer) {

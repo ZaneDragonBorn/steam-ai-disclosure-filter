@@ -1,6 +1,7 @@
 const POLICY_KEYS = [
     'defaultMode',
     'discoveryMode',
+    'wishlistMode',
     'preserveWishlist',
     'preserveOwned',
     'showAITags',

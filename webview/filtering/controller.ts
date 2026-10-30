@@ -73,15 +73,26 @@ export class FilterController {
                 this.tracked.delete(element);
             }
         }
-        for (const { element, appId, discovery, compact, wishlisted, owned, hover } of cards) {
+        for (const {
+            element,
+            appId,
+            discovery,
+            compact,
+            wishlisted,
+            owned,
+            hover,
+            wishlist,
+        } of cards) {
             if (this.tracked.get(element) !== appId && this.settings.debug)
                 console.debug('[AI Filter] detected App ID', appId);
             this.tracked.set(element, appId);
             const cached = this.results.get(appId);
             const result = cached && cached.expires > Date.now() ? cached.value : null;
-            const policy = discovery
-                ? { ...this.settings, mode: this.settings.discoveryMode ?? 'off' }
-                : this.settings;
+            const policy = wishlist
+                ? { ...this.settings, mode: this.settings.wishlistMode ?? 'off' }
+                : discovery
+                  ? { ...this.settings, mode: this.settings.discoveryMode ?? 'off' }
+                  : this.settings;
             const exemptDiscovery =
                 discovery &&
                 ((this.settings.preserveWishlist !== false && wishlisted) ||
@@ -191,9 +202,9 @@ export class FilterController {
             }, 30_100);
     }
     private cardTitle(element: HTMLElement): string {
-        const title = element.querySelector('.StoreSaleWidgetTitle, .title')?.cloneNode(true) as
-            | HTMLElement
-            | undefined;
+        const title = element
+            .querySelector('.StoreSaleWidgetTitle, .title, .P-zVPa2bdmQ-')
+            ?.cloneNode(true) as HTMLElement | undefined;
         title?.querySelectorAll('[data-aif-badge]').forEach((badge) => badge.remove());
         return title?.textContent?.trim() ?? '';
     }

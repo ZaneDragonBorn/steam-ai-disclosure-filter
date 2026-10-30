@@ -1,9 +1,12 @@
 [plugin]
-id = "dev.wyatt.ai-disclosure-filter"
+id = "dev.zanedb.ai-disclosure-filter"
 name = "AI Disclosure Filter"
-version = "0.7.8"
-author = "Wyatt"
-description = "Generative AI controls in Steam's storefront filter sidebars."
+version = "0.7.15"
+author = "Zane Dragonborn"
+description = "Brings Generative AI Filters across Steam UI alongside configuration for personalization."
+
+[assets]
+resources = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
 
 [backend]
 entry = "backend/main.lua"

@@ -1,10 +1,15 @@
 import { FilterMode } from '../shared/settings';
 
+export interface InsertionTarget {
+    mode: FilterMode;
+    side: 'before' | 'after';
+}
+
 /** Steam's CEF host may suppress HTML drag/drop. Pointer capture keeps reordering
  * local to the settings panel and avoids starting an OS/native drag operation. */
 export class FilterOrderDrag {
-    onDrop: (source: FilterMode, target: FilterMode) => void = () => {};
-    onFeedback: (source: FilterMode | null, target: FilterMode | null) => void = () => {};
+    onDrop: (source: FilterMode, target: InsertionTarget) => void = () => {};
+    onFeedback: (source: FilterMode | null, target: InsertionTarget | null) => void = () => {};
     private active?: {
         source: FilterMode;
         handle: HTMLElement;
@@ -25,18 +30,27 @@ export class FilterOrderDrag {
         };
         handle.setPointerCapture?.(event.pointerId);
     }
-    private target(event: PointerEvent): FilterMode | null {
+    private target(event: PointerEvent): InsertionTarget | null {
         const active = this.active;
         if (!active) return null;
-        const row = active.handle.ownerDocument
-            .elementFromPoint?.(event.clientX, event.clientY)
-            ?.closest<HTMLElement>('[data-aif-order]');
-        const mode = row?.dataset.aifOrder;
-        return mode &&
-            mode !== 'off' &&
-            row?.closest('[data-aif-order-list]') === active.handle.closest('[data-aif-order-list]')
-            ? (mode as FilterMode)
-            : null;
+        const list = active.handle.closest('[data-aif-order-list]');
+        const hit = active.handle.ownerDocument.elementFromPoint?.(event.clientX, event.clientY);
+        if (!list || hit?.closest('[data-aif-order-list]') !== list) return null;
+        if (hit.closest<HTMLElement>('[data-aif-order]')?.dataset.aifOrder === 'off') return null;
+        const rows = [...list.querySelectorAll<HTMLElement>('[data-aif-order]')].filter(
+            (row) => row.dataset.aifOrder !== 'off',
+        );
+        // Midpoints define insertion boundaries, including the gaps between cards.
+        const row = rows.find((row) => {
+            const box = row.getBoundingClientRect();
+            return event.clientY < box.top + box.height / 2;
+        });
+        const anchor = row ?? rows[rows.length - 1];
+        if (!anchor || anchor.dataset.aifOrder === active.source) return null;
+        return {
+            mode: anchor.dataset.aifOrder as FilterMode,
+            side: row ? 'before' : 'after',
+        };
     }
     move(event: PointerEvent): void {
         const active = this.active;
@@ -44,7 +58,6 @@ export class FilterOrderDrag {
         if (Math.abs(event.clientY - active.startY) < 4 && !active.moved) return;
         active.moved = true;
         event.preventDefault();
-        this.onFeedback(active.source, this.target(event));
         // Native settings panels can be narrow and independently scrollable.
         for (let node = active.handle.parentElement; node; node = node.parentElement) {
             if (node.scrollHeight <= node.clientHeight) continue;
@@ -55,12 +68,13 @@ export class FilterOrderDrag {
             else if (event.clientY > box.bottom - 35) node.scrollTop += 18;
             break;
         }
+        this.onFeedback(active.source, this.target(event));
     }
     up(event: PointerEvent): void {
         const active = this.active;
         if (!active || active.pointerId !== event.pointerId) return;
         const target = this.target(event);
-        if (active.moved && target && target !== active.source) this.onDrop(active.source, target);
+        if (active.moved && target) this.onDrop(active.source, target);
         this.cancel();
     }
     cancel(): void {

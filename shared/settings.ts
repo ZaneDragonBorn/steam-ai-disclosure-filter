@@ -16,6 +16,7 @@ export interface CustomFilter {
 export interface Settings {
     mode: FilterMode;
     discoveryMode?: FilterMode;
+    wishlistMode?: FilterMode;
     preserveWishlist?: boolean;
     preserveOwned?: boolean;
     showAITags?: boolean;
@@ -87,6 +88,13 @@ export function normalizeSettings(raw: Record<string, unknown>): Settings {
     return {
         mode,
         discoveryMode,
+        wishlistMode:
+            raw.wishlistMode === 'hide' ||
+            raw.wishlistMode === 'custom' ||
+            raw.wishlistMode === 'light' ||
+            customFilters.some((f) => raw.wishlistMode === `custom:${f.id}`)
+                ? (raw.wishlistMode as FilterMode)
+                : 'off',
         preserveWishlist: raw.preserveWishlist !== false,
         preserveOwned: raw.preserveOwned === true,
         showAITags: raw.showAITags !== false,
@@ -167,13 +175,15 @@ export function reorderPresets(
     settings: Settings,
     source: FilterMode,
     target: FilterMode,
+    side?: 'before' | 'after',
 ): FilterMode[] {
     const order = availablePresets(settings).map((p) => p.mode);
     const from = order.indexOf(source),
         to = order.indexOf(target);
     if (from > 0 && to > 0 && from !== to) {
         order.splice(from, 1);
-        order.splice(to, 0, source);
+        const insertion = side ? order.indexOf(target) + (side === 'after' ? 1 : 0) : to;
+        order.splice(insertion, 0, source);
     }
     return order.filter((m) => m !== 'off');
 }

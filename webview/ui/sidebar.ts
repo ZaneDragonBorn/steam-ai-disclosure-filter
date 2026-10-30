@@ -1,12 +1,7 @@
 import { Settings, availablePresets, presetDescription, shouldHide } from '../../shared/settings';
 import type { ReviewedApp } from '../../shared/history';
 import { rankApps } from '../../shared/history';
-import {
-    filterHosts,
-    SALE_FILTER_GROUP,
-    SALE_FILTER_HEADER,
-    SALE_FILTER_HEADING,
-} from '../steam/surfaces';
+import { filterHosts, categoryFilterGroup } from '../steam/surfaces';
 
 const css = `
 [data-aif-panel]{box-sizing:border-box;margin:0 0 12px;padding:0;color:inherit;background:transparent;border:0;font:inherit;font-size:12px;line-height:1.5;min-width:0}
@@ -179,10 +174,11 @@ export class SidebarUI {
                 } else {
                     // Native sale headers use 70% title opacity and this SVG, not a
                     // text glyph. Reuse their CSS classes for the same hover treatment.
-                    const native = host.querySelector<HTMLElement>(SALE_FILTER_HEADER);
-                    const nativeHeading = native?.querySelector<HTMLElement>(SALE_FILTER_HEADING);
-                    if (native) header.classList.add(...native.classList);
-                    if (nativeHeading) heading.classList.add(...nativeHeading.classList);
+                    const native = categoryFilterGroup(host);
+                    if (native) {
+                        header.classList.add(...native.header.classList);
+                        heading.classList.add(...native.heading.classList);
+                    }
                     const ns = 'http://www.w3.org/2000/svg';
                     const chevron = this.doc.createElementNS(ns, 'svg');
                     chevron.setAttribute('class', 'aif-chevron');
@@ -318,7 +314,7 @@ export class SidebarUI {
                 error.className = 'aif-error';
                 error.setAttribute('role', 'status');
                 body.append(error);
-                const nativeGroup = !searchPage ? host.querySelector(SALE_FILTER_GROUP) : null;
+                const nativeGroup = !searchPage ? categoryFilterGroup(host)?.group : null;
                 if (nativeGroup?.parentElement)
                     nativeGroup.parentElement.insertBefore(panel, nativeGroup);
                 else host.prepend(panel);

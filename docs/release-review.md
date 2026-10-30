@@ -1,5 +1,7 @@
 # Pre-publication review
 
+> Historical review. See the [follow-up](submission-follow-up-2026-10-29.md) for the MIT license, verified UI component decisions, confirmed maintainer identity and updated eligibility assessment.
+
 Reviewed 2026-10-25. This is a technical audit, not SteamBrew approval. Nothing was uploaded, submitted or published.
 
 ## Eligibility: unresolved
@@ -12,7 +14,7 @@ The same guidelines require functionality specific to the Steam client; settings
 
 - [Submission guidelines](https://docs.steambrew.app/developers/submitting-plugins): eligibility, native UI, theme boundaries.
 - [Plugin database](https://github.com/SteamClientHomebrew/PluginDatabase): eventual submissions pin a source submodule for review; upstream changes alone do not publish updates.
-- [Submission checklist](https://github.com/SteamClientHomebrew/PluginDatabase/blob/main/.github/PULL_REQUEST_TEMPLATE/PLUGIN-SUBMISSION.md): authorship, licenses, open source, distinct functionality, Stable/Beta and independent tests. Some backend wording is legacy; use the current Starlight docs/template for architecture.
+- [Submission checklist](https://github.com/SteamClientHomebrew/PluginDatabase/blob/main/.github/pull_request_template.md): authorship, licenses, open source, distinct functionality, Stable/Beta and independent tests. Some backend wording is legacy; use the current Starlight docs/template for architecture.
 - [Official template](https://github.com/SteamClientHomebrew/PluginTemplate), [manifest](https://docs.steambrew.app/plugins/structure/config), [configuration](https://docs.steambrew.app/plugins/advanced/config), [hooking](https://docs.steambrew.app/plugins/advanced/hooking).
 
 ## Audit and changes
@@ -37,6 +39,8 @@ All production modules, build scripts/configuration, dependencies and regression
 Verification for v0.7.8: 71 tests pass, strict TypeScript checks pass, and the unsigned local package compiles and verifies. Formatting checks cover maintained source/tests; SDK-managed JSON is excluded because Starlight rewrites it during builds. No local Steam installation was replaced during this cleanup. The workspace had no existing commits, so the requested commit establishes an initial source baseline. Local research scratch files, generated packages, promotional work and Codex configuration are excluded.
 
 ## Maintainer checks before release
+
+**0.7.9 correction:** native client testing found that the exported Tabs component stayed on a Steam loading placeholder in desktop Library Manager. It was replaced with the already-supported native DialogButton controls, retaining tab semantics/selected styling and mounted drafts. The 0.7.8 table above records the earlier audit, not a guarantee that every exported component resolves in every host. Wishlist integration uses the inspected native Options form schema and metadata layout; see the research log for virtualization constraints.
 
 - Resolve both eligibility issues and disclose AI involvement accurately. Be able to explain and maintain the implementation.
 - Choose an open-source license and add its full text. No license was selected automatically. Verify notices for SDK/compiler-generated runtime material and any upstream-derived code before distribution.

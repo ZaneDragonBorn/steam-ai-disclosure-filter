@@ -1,4 +1,5 @@
 import { appIdFromURL } from './provider';
+import { isWishlistURL, wishlistRows } from './wishlist';
 
 export function isSupportedStore(url: string): boolean {
     try {
@@ -11,12 +12,32 @@ export function isSupportedStore(url: string): boolean {
         return false;
     }
 }
-// Shared sale/category components inspected on Next Fest, VR and category pages.
-// Next Fest no longer wraps these in .sale_item_browser. Keep hashes isolated.
-export const SALE_SIDEBAR = '._1tOSyFfIWM42bIEwzvMp8v';
-export const SALE_FILTER_GROUP = '._3aX5FdS6RjfaN8MCACBPf5';
-export const SALE_FILTER_HEADER = '._3nsXKzSSkXGctsyIBw1RIF';
-export const SALE_FILTER_HEADING = '._3X8r5nTmkQJqI-YG8Vl91b';
+// Older storefront bundles still use these classes. Current Stable and Beta
+// share a new bundle; detect its component structure rather than new hashes.
+const SALE_SIDEBAR = '._1tOSyFfIWM42bIEwzvMp8v';
+const BROWSE_CARDS = '.LibraryAssetExpandedDisplay,.StoreSaleWidgetOuterContainer';
+const FILTER_CHEVRON = 'svg[viewBox="0 0 24.833 21.917"]';
+
+/** Steam's filter header is a title followed by its standard polygon chevron.
+ * Keep this observed component signature here if Steam changes its markup. */
+export function categoryFilterGroup(host: HTMLElement): {
+    group: HTMLElement;
+    header: HTMLElement;
+    heading: HTMLElement;
+} | null {
+    for (const svg of host.querySelectorAll(FILTER_CHEVRON)) {
+        if (svg.closest('[data-aif-panel]') || !svg.querySelector(':scope > polygon')) continue;
+        const header = svg.parentElement;
+        const heading = header?.querySelector<HTMLElement>(':scope > div');
+        const group = header?.parentElement;
+        if (header && heading?.textContent?.trim() && group) return { group, header, heading };
+    }
+    // Compatibility with the original storefront component.
+    const group = host.querySelector<HTMLElement>('._3aX5FdS6RjfaN8MCACBPf5');
+    const header = group?.querySelector<HTMLElement>('._3nsXKzSSkXGctsyIBw1RIF');
+    const heading = header?.querySelector<HTMLElement>('._3X8r5nTmkQJqI-YG8Vl91b');
+    return group && header && heading ? { group, header, heading } : null;
+}
 // These attributes describe only our local presentation, never Steam's data.
 export const PRESENTATION_HIDDEN = 'data-aif-slot-hidden';
 const CARD_SELECTORS = [
@@ -36,9 +57,40 @@ const CARD_SELECTORS = [
     'a.Ay0ys40M1NtzbqyKeNgwX',
 ].join(',');
 export function filterHosts(doc: Document): HTMLElement[] {
-    return isSupportedStore(doc.location.href)
-        ? [...doc.querySelectorAll<HTMLElement>('#additional_search_options, ' + SALE_SIDEBAR)]
-        : [];
+    if (!isSupportedStore(doc.location.href)) return [];
+    const hosts = new Set(
+        doc.querySelectorAll<HTMLElement>('#additional_search_options, ' + SALE_SIDEBAR),
+    );
+    for (const input of doc.querySelectorAll('input.DialogInput')) {
+        if (input.closest('[data-aif-panel]')) continue;
+        // The tag search sits inside the sidebar, beside the browser's cards.
+        // Do not depend on translated labels, route names or generated classes.
+        let host = input.parentElement;
+        for (let depth = 0; host && depth < 5; depth++, host = host.parentElement) {
+            if (host.querySelector(BROWSE_CARDS)) break;
+            const native = categoryFilterGroup(host);
+            if (!native || !host.parentElement) continue;
+            const groups = native.group.parentElement;
+            // The group list is a direct sidebar child. Without this boundary,
+            // an empty listing could make an outer page wrapper look like the
+            // sidebar merely because an unrelated discovery card sits beside it.
+            if (groups?.parentElement !== host) continue;
+            const repeated =
+                groups &&
+                [...groups.children].filter(
+                    (group) =>
+                        !group.matches('[data-aif-panel]') && !!group.querySelector(FILTER_CHEVRON),
+                ).length >= 2;
+            const listing = host.parentElement.querySelector(BROWSE_CARDS);
+            // Keep a mounted sidebar usable when Steam temporarily empties its
+            // results while changing tabs/search. New hosts require real cards.
+            if (repeated && (listing || host.querySelector('[data-aif-panel]'))) {
+                hosts.add(host);
+                break;
+            }
+        }
+    }
+    return [...hosts];
 }
 export interface StoreCard {
     element: HTMLElement;
@@ -48,6 +100,7 @@ export interface StoreCard {
     wishlisted: boolean;
     owned?: boolean;
     hover?: boolean;
+    wishlist?: boolean;
 }
 export function cardAppId(element: HTMLElement): number | null {
     const links = element.matches('a[href]')
@@ -130,17 +183,20 @@ export function detectStoreCards(doc: Document): StoreCard[] {
         .filter((r): r is HTMLElement => !!r);
     // home.js BuildHomePageGenericCap/HeaderCap and community recommendation
     // builders reuse these classes across personalized shelves (Oct 2026).
-    const candidates = new Set(doc.querySelectorAll<HTMLElement>(CARD_SELECTORS));
+    const wishlist = isWishlistURL(doc.location.href);
+    const candidates = new Set(
+        wishlist ? wishlistRows(doc) : doc.querySelectorAll<HTMLElement>(CARD_SELECTORS),
+    );
     // The same release/platform footer also appears in sale recommendation
     // anchors without either legacy wrapper. Detect that component structurally.
-    for (const footer of doc.querySelectorAll<HTMLElement>(
-        '.CapsuleBottomBar, ._1_ehE8jTqsTDnx5E7Sqjy7',
-    )) {
+    for (const footer of wishlist
+        ? []
+        : doc.querySelectorAll<HTMLElement>('.CapsuleBottomBar, ._1_ehE8jTqsTDnx5E7Sqjy7')) {
         const anchor = footer.closest<HTMLAnchorElement>('a[href]');
         if (anchor?.querySelector('img') && !anchor.parentElement?.closest(CARD_SELECTORS))
             candidates.add(anchor);
     }
-    for (const anchor of doc.querySelectorAll<HTMLAnchorElement>('a[href]')) {
+    for (const anchor of wishlist ? [] : doc.querySelectorAll<HTMLAnchorElement>('a[href]')) {
         const appId = appIdFromURL(anchor.href);
         if (
             appId === null ||
@@ -186,6 +242,7 @@ export function detectStoreCards(doc: Document): StoreCard[] {
             element,
             appId,
             discovery:
+                !wishlist &&
                 !element.matches('a.search_result_row') &&
                 !element.closest('.sale_item_browser') &&
                 !roots.some((root) => root.contains(element)),
@@ -196,6 +253,7 @@ export function detectStoreCards(doc: Document): StoreCard[] {
                 (!element.querySelector('.StoreSaleWidgetTitle,.ReviewScore,.title') &&
                     element.matches('.StoreSaleWidgetOuterContainer')),
             wishlisted: isWishlisted(element),
+            wishlist,
             owned: isOwned(element),
         });
     }

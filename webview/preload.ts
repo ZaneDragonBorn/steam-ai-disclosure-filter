@@ -10,6 +10,7 @@ import { reconcilePolicy } from './config';
 import { appIdFromURL } from './steam/provider';
 import { StorePageDisclosure } from './ui/storePage';
 import { managePageLifecycle } from './lifecycle';
+import { WishlistUI } from './ui/wishlist';
 
 export default async function main() {
     if (location.origin !== 'https://store.steampowered.com') return;
@@ -35,30 +36,27 @@ function startStoreView(): () => void {
     );
     const storePage = new StorePageDisclosure(document, cache);
     let writes: Promise<void> = Promise.resolve();
-    const sidebar = new SidebarUI(
-        document,
-        (patch) => {
-            revision++; // A pending local save supersedes an older lease response.
-            const task = writes
-                .catch(() => {})
-                .then(async () => {
-                    if (stopped) throw new Error('Plugin stopped');
-                    const validated = normalizeSettings({ ...raw, ...patch });
-                    for (const key of Object.keys(patch) as (keyof typeof validated)[]) {
-                        await pluginConfig.set(key, validated[key] as never);
-                        raw[key] = validated[key];
-                    }
-                    revision++;
-                    update();
-                });
-            writes = task;
-            return task;
-        },
-        filterHosts,
-        () => {
-            void refreshFilters();
-        },
-    );
+    const saveSettings = (patch: Partial<import('../shared/settings').Settings>) => {
+        revision++; // A pending local save supersedes an older lease response.
+        const task = writes
+            .catch(() => {})
+            .then(async () => {
+                if (stopped) throw new Error('Plugin stopped');
+                const validated = normalizeSettings({ ...raw, ...patch });
+                for (const key of Object.keys(patch) as (keyof typeof validated)[]) {
+                    await pluginConfig.set(key, validated[key] as never);
+                    raw[key] = validated[key];
+                }
+                revision++;
+                update();
+            });
+        writes = task;
+        return task;
+    };
+    const wishlist = new WishlistUI(document, saveSettings);
+    const sidebar = new SidebarUI(document, saveSettings, filterHosts, () => {
+        void refreshFilters();
+    });
     const controller = new FilterController(
         document,
         cache,
@@ -92,6 +90,7 @@ function startStoreView(): () => void {
         const settings = normalizeSettings(raw);
         sidebar.update(settings);
         sidebar.history(detectedApps(raw.detectedApps));
+        wishlist.update(settings);
         controller.update(settings);
         storePage.update(settings);
     };
@@ -123,6 +122,7 @@ function startStoreView(): () => void {
         provider.cancel();
         controller.stop();
         sidebar.stop();
+        wishlist.stop();
         storePage.stop();
         clearTimeout(historyTimer);
         clearTimeout(leaseTimer);

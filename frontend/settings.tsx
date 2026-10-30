@@ -9,7 +9,7 @@ import {
     usePluginConfig,
 } from 'millennium';
 import { useState, useRef, useEffect } from 'react';
-import { FilterOrderDrag } from './ordering';
+import { FilterOrderDrag, InsertionTarget } from './ordering';
 import {
     availablePresets,
     normalizeSettings,
@@ -27,6 +27,7 @@ export function SettingsContent() {
     const [mode, setMode] = usePluginConfig<string>('defaultMode');
     const [allowed, setAllowed] = usePluginConfig<number[]>('allowedApps');
     const [discoveryMode, setDiscoveryMode] = usePluginConfig<string>('discoveryMode');
+    const [wishlistMode, setWishlistMode] = usePluginConfig<string>('wishlistMode');
     const [preserveWishlist, setPreserveWishlist] = usePluginConfig<boolean>('preserveWishlist');
     const [preserveOwned, setPreserveOwned] = usePluginConfig<boolean>('preserveOwned');
     const [showAITags, setShowAITags] = usePluginConfig<boolean>('showAITags');
@@ -44,6 +45,7 @@ export function SettingsContent() {
     const settings = normalizeSettings({
         mode,
         discoveryMode,
+        wishlistMode,
         preserveWishlist,
         preserveOwned,
         showAITags,
@@ -57,12 +59,12 @@ export function SettingsContent() {
     const presets = availablePresets(settings);
     const knownApps = new Map(detectedApps(history).map((app) => [app.appId, app]));
     const [dragging, setDragging] = useState<FilterMode | null>(null);
-    const [dropTarget, setDropTarget] = useState<FilterMode | null>(null);
-    const reorder = (source: FilterMode, target: FilterMode) =>
-        save(setFilterOrder(reorderPresets(settings, source, target)));
+    const [dropTarget, setDropTarget] = useState<InsertionTarget | null>(null);
+    const reorder = (source: FilterMode, target: FilterMode, side?: 'before' | 'after') =>
+        save(setFilterOrder(reorderPresets(settings, source, target, side)));
     const drag = useRef<FilterOrderDrag | null>(null);
     if (!drag.current) drag.current = new FilterOrderDrag();
-    drag.current.onDrop = reorder;
+    drag.current.onDrop = (source, target) => reorder(source, target.mode, target.side);
     drag.current.onFeedback = (source, target) => {
         setDragging(source);
         setDropTarget(target);
@@ -90,6 +92,11 @@ export function SettingsContent() {
             !normalized.some((f) => discoveryMode === `custom:${f.id}`)
         )
             await setDiscoveryMode('off');
+        if (
+            wishlistMode?.startsWith('custom:') &&
+            !normalized.some((f) => wishlistMode === `custom:${f.id}`)
+        )
+            await setWishlistMode('off');
     };
     const add = async () => {
         const id = parseExceptionAppId(appId);
@@ -131,7 +138,9 @@ export function SettingsContent() {
                         </DialogBodyText>
                     </div>
                 </Field>
-                {(settings.mode === 'custom' || settings.discoveryMode === 'custom') && (
+                {(settings.mode === 'custom' ||
+                    settings.discoveryMode === 'custom' ||
+                    settings.wishlistMode === 'custom') && (
                     <Field
                         label="Custom disclosure phrases"
                         description="Shared with Custom mode in every storefront sidebar. Separate phrases with semicolons; matching ignores capitalization."
@@ -299,16 +308,29 @@ export function SettingsContent() {
                                 data-aif-order={preset.mode}
                                 style={{
                                     padding: 12,
+                                    position: 'relative',
                                     marginBottom: 8,
                                     background: 'rgba(255,255,255,.04)',
-                                    border:
-                                        dropTarget === preset.mode
-                                            ? '1px solid #67c1f5'
-                                            : '1px solid transparent',
+                                    border: '1px solid transparent',
                                     borderRadius: 3,
                                     opacity: dragging === preset.mode ? 0.55 : 1,
                                 }}
                             >
+                                {dropTarget?.mode === preset.mode && (
+                                    <div
+                                        aria-hidden="true"
+                                        data-aif-insertion={dropTarget.side}
+                                        style={{
+                                            position: 'absolute',
+                                            left: 0,
+                                            right: 0,
+                                            [dropTarget.side === 'before' ? 'top' : 'bottom']: -5,
+                                            height: 2,
+                                            background: '#67c1f5',
+                                            pointerEvents: 'none',
+                                        }}
+                                    />
+                                )}
                                 <Focusable
                                     onPointerDown={(e) =>
                                         drag.current!.down(

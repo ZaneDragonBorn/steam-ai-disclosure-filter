@@ -1,5 +1,6 @@
 import { PRESENTATION_HIDDEN } from '../steam/surfaces';
 import { appIdFromURL } from '../steam/provider';
+import { isWishlistURL } from '../steam/wishlist';
 
 const HIDDEN = 'data-ai-disclosure-filter-hidden';
 /** Observed shared category/event grid cells and homepage promotion columns.
@@ -30,6 +31,8 @@ export class SlotPresentation {
         // around the app anchor. Collapse that wrapper too, stopping at indexed
         // carousel pages or multi-card containers owned by Steam.
         for (const card of this.doc.querySelectorAll<HTMLElement>(`[${HIDDEN}]`)) {
+            // Wishlist's virtualizer owns row measurement and track geometry.
+            if (isWishlistURL(this.doc.location.href)) continue;
             let node = card.parentElement;
             for (let depth = 0; node && depth < 4; depth++, node = node.parentElement) {
                 if (

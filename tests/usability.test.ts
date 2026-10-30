@@ -175,16 +175,20 @@ test('pointer-captured ordering works without native HTML drag and rejects locke
     const handle = doc.querySelector<HTMLElement>('[data-aif-order="hide"] span')!;
     const drag = new FilterOrderDrag();
     const drops: string[][] = [];
-    drag.onDrop = (a, b) => drops.push([a, b]);
+    drag.onDrop = (a, b) => drops.push([a, b.mode, b.side]);
     const event = (y: number) =>
         ({ button: 0, pointerId: 1, clientX: 10, clientY: y, preventDefault() {} }) as PointerEvent;
     let target: Element = doc.querySelector('[data-aif-order="light"] span')!;
     doc.elementFromPoint = () => target;
+    for (const [i, row] of [
+        ...doc.querySelectorAll<HTMLElement>('[data-aif-order-list]:first-child [data-aif-order]'),
+    ].entries())
+        row.getBoundingClientRect = () => ({ top: i * 40, height: 32 }) as DOMRect;
     try {
         drag.down(event(50), handle, 'hide');
-        drag.move(event(10));
-        drag.up(event(10));
-        assert.deepEqual(drops, [['hide', 'light']]);
+        drag.move(event(45));
+        drag.up(event(45));
+        assert.deepEqual(drops, [['hide', 'light', 'before']]);
         target = doc.querySelector('[data-aif-order="off"] span')!;
         drag.down(event(50), handle, 'hide');
         drag.move(event(10));
@@ -208,6 +212,68 @@ test('pointer-captured ordering works without native HTML drag and rejects locke
         drag.cancel();
         drag.up(event(10));
         assert.equal(drops.length, 1);
+    } finally {
+        drag.cancel();
+        dom.window.close();
+    }
+});
+
+test('drag insertion preview matches the saved boundary above, below and between filters', async () => {
+    const { FilterOrderDrag } = await import('../frontend/ordering');
+    const dom = new JSDOM(
+        '<div data-aif-order-list>' +
+            ['off', 'light', 'custom', 'hide']
+                .map((m) => '<div data-aif-order="' + m + '"><span>' + m + '</span></div>')
+                .join('') +
+            '</div>',
+    );
+    const doc = dom.window.document,
+        list = doc.querySelector<HTMLElement>('[data-aif-order-list]')!;
+    const rows = [...list.querySelectorAll<HTMLElement>('[data-aif-order]')];
+    rows.forEach(
+        (row, i) => (row.getBoundingClientRect = () => ({ top: i * 40, height: 32 }) as DOMRect),
+    );
+    const drag = new FilterOrderDrag();
+    const settings = normalizeSettings({});
+    let feedback: unknown,
+        saved: string[] = [];
+    drag.onFeedback = (_, target) => (feedback = target);
+    drag.onDrop = (source, target) => {
+        saved = reorderPresets(settings, source, target.mode, target.side);
+    };
+    const event = (y: number) =>
+        ({ button: 0, pointerId: 1, clientX: 10, clientY: y, preventDefault() {} }) as PointerEvent;
+    let hit: Element = rows[3];
+    doc.elementFromPoint = () => hit;
+    try {
+        drag.down(event(45), rows[1].querySelector('span')!, 'light');
+        drag.move(event(125));
+        assert.deepEqual(feedback, { mode: 'hide', side: 'before' });
+        drag.up(event(125));
+        assert.deepEqual(saved, ['custom', 'light', 'hide']);
+        drag.down(event(45), rows[1].querySelector('span')!, 'light');
+        drag.move(event(150));
+        assert.deepEqual(feedback, { mode: 'hide', side: 'after' });
+        drag.up(event(150));
+        assert.deepEqual(saved, ['custom', 'hide', 'light']);
+        hit = rows[1];
+        drag.down(event(125), rows[3].querySelector('span')!, 'hide');
+        drag.move(event(45));
+        assert.deepEqual(feedback, { mode: 'light', side: 'before' });
+        drag.up(event(45));
+        assert.deepEqual(saved, ['hide', 'light', 'custom']);
+        hit = list; // The gap after Light, before Custom.
+        drag.down(event(125), rows[3].querySelector('span')!, 'hide');
+        drag.move(event(77));
+        assert.deepEqual(feedback, { mode: 'custom', side: 'before' });
+        drag.up(event(77));
+        assert.deepEqual(saved, ['light', 'hide', 'custom']);
+        assert.equal(feedback, null);
+        assert.deepEqual(reorderPresets(settings, 'light', 'off', 'before'), [
+            'light',
+            'custom',
+            'hide',
+        ]);
     } finally {
         drag.cancel();
         dom.window.close();

@@ -1,0 +1,28 @@
+name: Bug report
+description: Report a problem with AI Disclosure Filter.
+body:
+    - type: textarea
+      id: problem
+      attributes:
+          label: What happened?
+          description: Describe what went wrong and what you expected instead.
+      validations:
+          required: true
+    - type: input
+      id: page
+      attributes:
+          label: Steam page
+          description: Paste the page link, if the problem happens on a particular page.
+    - type: input
+      id: version
+      attributes:
+          label: Plugin version
+    - type: input
+      id: filter
+      attributes:
+          label: Selected AI filter
+    - type: textarea
+      id: reproduce
+      attributes:
+          label: Steps and screenshots
+          description: Explain how to reproduce it. Screenshots are welcome; crop any personal information you do not want public.
