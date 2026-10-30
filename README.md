@@ -8,7 +8,7 @@ A Millennium plugin that lets you filter games with Steam AI disclosures and see
 
 > **AI Disclosure**
 >
-> I built this plugin with ChatGPT Codex, then manually revised and tested it. Before publishing, I reviewed the full codebase and made changes where needed. I have a programming background, understand the code, and can maintain and debug it without AI assistance. — Zane Dragonborn
+> I built this plugin with ChatGPT Codex, then manually revised and tested it. Before publishing, I reviewed the full codebase and made changes where needed. I have a programming background, understand the code, and can maintain and debug it without AI assistance.
 
 ![AI Disclosure Filter feature overview](docs/images/feature-overview.png)
 
