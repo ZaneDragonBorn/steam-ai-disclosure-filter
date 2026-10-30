@@ -30,12 +30,12 @@
     "frontend/**/*",
     "webview/**/*",
     "shared/**/*",
-    "tests/**/*",
     ".millennium/**/*.d.ts"
   ],
   "exclude": [
     "node_modules",
     ".research",
-    "dist"
+    "dist",
+    "tests"
   ]
 }

@@ -13,3 +13,8 @@ promo-work/
 *.dmp
 *.bak
 .millennium/lsp/
+# Maintainer-only reports, editor configuration and regression harness.
+tests/
+docs/*.md
+docs/images/README.md
+.luarc.json

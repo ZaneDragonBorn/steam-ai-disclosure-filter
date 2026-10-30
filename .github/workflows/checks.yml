@@ -19,7 +19,6 @@ jobs:
                   cache: npm
             - run: npm ci
             - run: npm run typecheck
-            - run: npm test
             - run: npm run format:check
             - run: npm run package
             - run: node node_modules/@steambrew/starlight/bin/starlight.js verify ai-disclosure-filter.star

@@ -52,29 +52,25 @@ Starlight's npm package omits a license field. That omission is documented here
 rather than treated as a prohibition on compiler output. The compiler executable
 and its dependencies are development tooling and are not shipped inside the plugin.
 
-## Development and test dependencies
+## Build dependencies
 
-These run during development/testing; their implementation is not bundled into
+These run when building or checking the source; their implementation is not bundled into
 the plugin. The lockfile records exact versions and license identifiers:
 
 | Direct package   | Version | License    |
 | ---------------- | ------- | ---------- |
 | TypeScript       | 5.9.3   | Apache-2.0 |
 | Prettier         | 3.6.2   | MIT        |
-| tsx              | 4.20.6  | MIT        |
-| jsdom            | 26.1.0  | MIT        |
-| @types/jsdom     | 21.1.7  | MIT        |
 | @types/react     | 19.1.1  | MIT        |
 | @types/react-dom | 19.1.1  | MIT        |
 
-Transitive package declarations in the current lockfile are MIT, MIT-0,
-BSD-2-Clause, BSD-3-Clause, ISC and Apache-2.0. Preserve their supplied license
-files if redistributing a dependency tree or development-tool bundle. This
-repository excludes `node_modules`, generated SDKs and compiled plugin archives.
+Dependency license declarations are recorded in `package-lock.json`. Preserve
+their supplied license files if redistributing a dependency tree or build-tool
+bundle. This repository excludes `node_modules`, generated SDKs and compiled
+plugin archives.
 
 ## Steam content
 
 Steam and its assets belong to their respective owners. Storefront artwork is
-not packaged by this plugin. Steam disclosure text is retrieved at runtime; the
-small research/test fixtures reproduce response structure and example text for
-verification, without claiming ownership or relicensing that text.
+not packaged by this plugin. Steam disclosure text is retrieved at runtime;
+this project does not claim ownership of or relicense that text.
